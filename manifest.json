@@ -2,7 +2,7 @@
     "name": "Pop",
     "short_name": "Pop",
     "start_url": "/",
-    "display": "standalone",
+    "display": "fullscreen",
     "background_color": "#000000",
     "description": "Pop balloons.",
     "icons": [
