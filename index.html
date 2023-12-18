@@ -74,9 +74,9 @@
         let score = 0;
 
         let isDoubleShotEnabled = false;
-        const doubleShotUpgradeCost = 300;
+        const doubleShotUpgradeCost = 500;
         let isTripleShotEnabled = false; // New variable for triple shot
-        const tripleShotUpgradeCost = 1000; // Cost for triple shot
+        const tripleShotUpgradeCost = 2000; // Cost for triple shot
         let isMetalShotEnabled = false; // New variable for metal shot
         const metalShotUpgradeCost = 2000; // Cost for metal shot
 
@@ -209,7 +209,7 @@
         function updateSpawnInterval() {
             const timeElapsed = Date.now() - startTime;
             if (timeElapsed > 120000) { // After 120 seconds
-                balloonSpawnInterval = 500; // Update interval to 100
+                balloonSpawnInterval = 400; // Update interval to 100
                 console.log(balloonSpawnInterval);
                 // } else if (timeElapsed > 60000) { // After 0.9 seconds
                 //     balloonSpawnInterval = 450; // Update interval to 700
