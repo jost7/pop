@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none;
+            /* Prevents scrolling */
+            user-select: none;
+            /* Prevents text selection */
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        #gameCanvas {
+            border: 3px solid black;
+            /* background-color: rgb(103, 255, 103); */
+            background: rgb(2, 0, 36);
+            background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(0, 212, 255, 1) 0%, rgba(52, 146, 255, 1) 100%);
+        }
+
+        canvas {
+            touch-action: none;
+            /* Prevents the browser's default touch behaviors like zooming and scrolling */
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 350;
+        canvas.height = 600;
+
+        const projectiles = [];
+        const slingshot = { x: canvas.width / 2, y: canvas.height - 50 };
+        const speed = 5;
+        const projectileRadius = 5;
+
+        let balloons = [];
+        const balloonRadius = 25;
+        const gravity = 1;
+
+        let isMouseDown = false;
+        let mouseDownTime = 0;
+
+        const maxSpeed = 30;
+        const powerBar = { width: 10, height: 60, x: slingshot.x - 30, y: slingshot.y - 100 };
+        const minChargeTime = 800; // Shorter time represents less power
+
+        const minPowerThreshold = 0.5; // Minimum power required to shoot
+
+        let startTime = Date.now();
+        const redBalloonGravity = 0.55; // Slower falling speed for red balloons
+        const redBalloonSpawnInterval = 2000; // Less frequent spawn for red balloons
+
+        let balloonSpawnInterval = 800; // Initial spawn interval in milliseconds
+
+        let score = 0;
+
+        let isDoubleShotEnabled = false;
+        const doubleShotUpgradeCost = 300;
+        let isTripleShotEnabled = false; // New variable for triple shot
+        const tripleShotUpgradeCost = 1000; // Cost for triple shot
+        let isMetalShotEnabled = false; // New variable for metal shot
+        const metalShotUpgradeCost = 2000; // Cost for metal shot
+
+        let elapsedTime = 0;
+
+        let upgradeButton = { x: 10, y: canvas.height - 50, width: 100, height: 40, text: 'Upgrade' };
+
+        let gameOver = false;
+
+        let playAgainButton = { x: canvas.width / 2.5 - 60, y: canvas.height / 2 + 30, width: 170, height: 40, text: 'Refresh to restart' };
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        // Somewhere in your global variables
+        let powerUpActive = false;
+        let powerUpEndTime = 0;
+        let maxPower = maxSpeed;  // Assuming maxSpeed is the full power for a shot
+
+        let isTouching = false;
+
+        canvas.addEventListener('touchstart', function (event) {
+            event.preventDefault();
+            const touch = event.touches[0] || event.changedTouches[0]; // Ensure we're getting the touch
+            const rect = canvas.getBoundingClientRect();
+            touchStartX = touch.clientX - rect.left;
+            touchStartY = touch.clientY - rect.top;
+            touchStartTime = new Date().getTime();
+
+            // console.log("Touch Start:", touchStartX, touchStartY); // Log the touch start coordinates
+
+            isTouching = true;
+            requestAnimationFrame(updatePowerBar);
+        }, { passive: false });
+
+
+        canvas.addEventListener('touchmove', function (event) {
+            const touch = event.touches[0] || event.changedTouches[0];
+            touchStartX = touch.clientX - canvas.getBoundingClientRect().left;
+            touchStartY = touch.clientY - canvas.getBoundingClientRect().top;
+
+            // console.log("Touch Move:", touchStartX, touchStartY); // Log touch move coordinates
+        }, { passive: false });
+
+
+        canvas.addEventListener('touchend', function (event) {
+            event.preventDefault();
+            const touchDuration = new Date().getTime() - touchStartTime;
+            const power = Math.min(touchDuration / minChargeTime, 1);
+
+            // console.log("Touch End - Duration:", touchDuration, "Coords:", touchStartX, touchStartY); // Log touch end details
+
+            if (power >= minPowerThreshold) {
+                createProjectile(touchStartX, touchStartY, touchDuration);
+            }
+
+            isTouching = false;
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', function (event) {
+            const touch = event.changedTouches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            // Assuming you have a function to handle button clicks
+            handleUpgradeClick(x, y);
+        });
+
+
+
+        // canvas.addEventListener('touchstart', function (event) {
+        //     event.preventDefault();
+        //     const touch = event.touches[0];
+        //     const rect = canvas.getBoundingClientRect();
+        //     touchStartX = touch.clientX - rect.left;
+        //     touchStartY = touch.clientY - rect.top;
+        //     touchStartTime = new Date().getTime();
+        // }, { passive: false });
+
+        // canvas.addEventListener('touchend', function (event) {
+        //     event.preventDefault();
+        //     const touchDuration = new Date().getTime() - touchStartTime;
+        //     createProjectile(touchStartX, touchStartY, touchDuration);
+        // }, { passive: false });
+
+        // canvas.addEventListener('touchmove', function (event) {
+        //     event.preventDefault();
+        // }, { passive: false });
+
+        function drawUpgradeButton() {
+            if (!isTripleShotEnabled && score >= tripleShotUpgradeCost) {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
+                ctx.font = '12px "Press Start 2P"';
+                ctx.fillStyle = 'white';
+                ctx.fillText("Triple Shot", upgradeButton.x + 10, upgradeButton.y + 25);
+            } else if (!isDoubleShotEnabled && score >= doubleShotUpgradeCost) {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
+                ctx.font = '12px "Press Start 2P"';
+                ctx.fillStyle = 'white';
+                ctx.fillText(upgradeButton.text, upgradeButton.x + 10, upgradeButton.y + 25);
+            }
+        }
+
+        function isInsideButton(pos, btn) {
+            return pos.x > btn.x && pos.x < btn.x + btn.width && pos.y > btn.y && pos.y < btn.y + btn.height;
+        }
+
+        function handleUpgradeClick(x, y) {
+            const pos = { x, y };
+            if (isInsideButton(pos, upgradeButton)) {
+                if (!isDoubleShotEnabled && score >= doubleShotUpgradeCost) {
+                    purchaseUpgrade('double');
+                } else if (!isTripleShotEnabled && score >= tripleShotUpgradeCost) {
+                    purchaseUpgrade('triple');
+                }
+            }
+        }
+
+        canvas.addEventListener('click', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            handleUpgradeClick(x, y);
+        });
+
+        function updateSpawnInterval() {
+            const timeElapsed = Date.now() - startTime;
+            if (timeElapsed > 120000) { // After 120 seconds
+                balloonSpawnInterval = 500; // Update interval to 100
+                console.log(balloonSpawnInterval);
+                // } else if (timeElapsed > 60000) { // After 0.9 seconds
+                //     balloonSpawnInterval = 450; // Update interval to 700
+                console.log(balloonSpawnInterval);
+            } else if (timeElapsed > 30000) { // After 0.9 seconds
+                balloonSpawnInterval = 600; // Update interval to 700
+                console.log(balloonSpawnInterval);
+            }
+        }
+
+
+        canvas.addEventListener('mouseup', function (event) {
+            if (isMouseDown) {
+                const currentTime = new Date().getTime();
+                const timeHeld = currentTime - mouseDownTime;
+                const power = Math.min(timeHeld / minChargeTime, 1);
+
+                if (power >= minPowerThreshold) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    createProjectile(x, y, timeHeld);
+                }
+
+                isMouseDown = false;
+            }
+        });
+
+        function purchaseUpgrade(type) {
+            if (type === 'double' && score >= doubleShotUpgradeCost && !isDoubleShotEnabled) {
+                score -= doubleShotUpgradeCost;
+                isDoubleShotEnabled = true;
+            } else if (type === 'triple' && score >= tripleShotUpgradeCost && !isTripleShotEnabled) {
+                score -= tripleShotUpgradeCost;
+                isTripleShotEnabled = true;
+            }
+        }
+
+        function createProjectile(x, y, timeHeld) {
+            const angle = Math.atan2(y - slingshot.y, x - slingshot.x);
+            let power = Math.min(timeHeld / minChargeTime, 1);
+
+            if (powerUpActive) {
+                power = 1; // Full power if power-up is active
+            }
+
+            const projectileSpeed = power * maxSpeed;
+
+            // Create projectiles based on upgrades
+            projectiles.push({
+                x: slingshot.x,
+                y: slingshot.y,
+                vx: Math.cos(angle) * projectileSpeed,
+                vy: Math.sin(angle) * projectileSpeed,
+                power: power
+            });
+
+            if (isDoubleShotEnabled || isTripleShotEnabled) {
+                projectiles.push({
+                    x: slingshot.x + 20,
+                    y: slingshot.y,
+                    vx: Math.cos(angle) * projectileSpeed,
+                    vy: Math.sin(angle) * projectileSpeed,
+                    power: power
+                });
+            }
+
+            if (isTripleShotEnabled) {
+                projectiles.push({
+                    x: slingshot.x - 20,
+                    y: slingshot.y,
+                    vx: Math.cos(angle) * projectileSpeed,
+                    vy: Math.sin(angle) * projectileSpeed,
+                    power: power
+                });
+            }
+        }
+
+        function drawPowerBar(power) {
+            ctx.fillStyle = 'grey';
+            ctx.fillRect(powerBar.x, powerBar.y, powerBar.width, powerBar.height);
+
+            ctx.fillStyle = 'green';
+            ctx.fillRect(powerBar.x, powerBar.y + powerBar.height * (1 - power), powerBar.width, powerBar.height * power);
+        }
+
+        canvas.addEventListener('mousedown', function (event) {
+            isMouseDown = true;
+            mouseDownTime = new Date().getTime();
+            requestAnimationFrame(updatePowerBar);
+        });
+
+        function updatePowerBar() {
+            if ((isMouseDown || isTouching) && !powerUpActive) { // Add check for powerUpActive
+                const currentTime = new Date().getTime();
+                // Use touchStartTime for touch events and mouseDownTime for mouse events
+                const startTime = isTouching ? touchStartTime : mouseDownTime;
+                const timeHeld = Math.min((currentTime - startTime) / 1000, 1); // Max 1 second charge
+                drawPowerBar(timeHeld);
+                requestAnimationFrame(updatePowerBar);
+            }
+        }
+
+
+
+        let projectileSprite = new Image();
+        projectileSprite.src = 'grey.png'; // Replace with the path to your projectile sprite
+
+        function drawProjectile(projectile) {
+            ctx.drawImage(projectileSprite, projectile.x - projectileRadius, projectile.y - projectileRadius, projectileRadius * 2, projectileRadius * 2);
+        }
+
+        // Load sprite sheets
+        let blueBalloonPopSprite = new Image();
+        blueBalloonPopSprite.src = 'bluepop.png'; // Path to blue balloon pop sprite sheet
+
+        let redBalloonPopSprite = new Image();
+        redBalloonPopSprite.src = 'redpop.png'; // Path to red balloon pop sprite sheet
+
+        let greenBalloonPopSprite = new Image();
+        greenBalloonPopSprite.src = 'greenpop.png'; // Path to green balloon pop sprite sheet
+
+        let yellowBalloonPopSprite = new Image(); // Add this line
+        yellowBalloonPopSprite.src = 'yellowpop.png'; // Path to yellow balloon pop sprite sheet
+
+
+        function spawnBalloon() {
+            const currentTime = Date.now();
+            const timeElapsed = currentTime - startTime;
+
+            const x = Math.random() * canvas.width;
+            let balloon;
+            let shouldSpawnBalloon = true;
+
+            const isGreenBalloon = timeElapsed > 60000 && Math.random() < 0.3; // Less rare green balloon
+            const isRedBalloon = timeElapsed > 30000 && Math.random() < 0.7; // Common red balloon
+            const isYellowBalloon = timeElapsed > 1000 && Math.random() < 0.15; // Very rare yellow balloon
+
+
+            if (isYellowBalloon) {
+                // Yellow balloons introduced after 100 seconds, very fast
+                balloon = { x: x, y: -balloonRadius, vy: gravity * 4, color: 'yellow' };
+            } else if (isGreenBalloon) {
+                // Green balloons introduced after 60 seconds, twice as fast
+                balloon = { x: x, y: -balloonRadius, vy: gravity * 2, color: 'green' };
+            } else if (isRedBalloon) {
+                // Red balloons introduced after 30 seconds
+                balloon = { x: x, y: -balloonRadius, vy: redBalloonGravity, color: 'red' };
+            } else {
+                // Default blue balloons
+                balloon = { x: x, y: -balloonRadius, vy: gravity, color: 'blue' };
+            }
+
+            // Make sure to initialize balloon popping state and sprite sheet
+            balloon.isPopping = false;
+            balloon.popFrame = 0;
+            balloon.spriteSheet = getBalloonSpriteSheet(balloon.color);
+
+            // Decide if the balloon should be spawned based on its rarity
+            if (isYellowBalloon) {
+                shouldSpawnBalloon = Math.random() < 0.01; // Adjust for the desired rarity of yellow balloons
+            }
+
+            // Add the balloon to the array if it should be spawned
+            if (shouldSpawnBalloon) {
+                balloons.push(balloon);
+            }
+        }
+
+
+        function getBalloonSpriteSheet(color) {
+            switch (color) {
+                case 'blue': return blueBalloonPopSprite;
+                case 'red': return redBalloonPopSprite;
+                case 'green': return greenBalloonPopSprite;
+                case 'yellow': return yellowBalloonPopSprite; // Add this line
+                default: return null;
+            }
+        }
+
+        let blueBalloonSprite = new Image();
+        blueBalloonSprite.src = 'blue.png'; // Replace with the path to your sprite image
+
+        let redBalloonSprite = new Image();
+        redBalloonSprite.src = 'red.png'; // Replace with the path to your red balloon sprite
+
+        let greenBalloonSprite = new Image();
+        greenBalloonSprite.src = 'green.png'; // Replace with the path to your green balloon sprite
+
+        let yellowBalloonSprite = new Image(); // Add this line
+        yellowBalloonSprite.src = 'yellow.png'; // Path to your yellow balloon sprite
+
+
+        function drawBalloon(balloon) {
+            if (balloon.isPopping) {
+                const frameSize = 32; // Adjust according to your sprite sheet
+                const cols = 2; // Number of columns in your sprite sheet
+                const animationSpeed = 2; // Number of frames to wait before changing the sprite frame
+                const totalFrames = 6; // Total number of frames in your sprite sheet
+
+                const row = Math.floor(balloon.popFrame / cols);
+                const col = balloon.popFrame % cols;
+
+                ctx.drawImage(balloon.spriteSheet, col * frameSize, row * frameSize, frameSize, frameSize, balloon.x - balloonRadius, balloon.y - balloonRadius, balloonRadius * 2, balloonRadius * 2);
+
+                if (balloon.frameCounter === undefined) {
+                    balloon.frameCounter = 0;
+                }
+
+                balloon.frameCounter++;
+
+                if (balloon.frameCounter >= animationSpeed) {
+                    balloon.popFrame++;
+                    balloon.frameCounter = 0; // Reset the counter
+                }
+
+                if (balloon.popFrame >= totalFrames) {
+                    balloon.remove = true; // Mark for removal after animation
+                }
+            } else {
+
+                switch (balloon.color) {
+                    case 'blue':
+                        ctx.drawImage(blueBalloonSprite, balloon.x - balloonRadius, balloon.y - balloonRadius, balloonRadius * 2, balloonRadius * 2);
+                        break;
+                    case 'red':
+                        ctx.drawImage(redBalloonSprite, balloon.x - balloonRadius, balloon.y - balloonRadius, balloonRadius * 2, balloonRadius * 2);
+                        break;
+                    case 'green':
+                        ctx.drawImage(greenBalloonSprite, balloon.x - balloonRadius, balloon.y - balloonRadius, balloonRadius * 2, balloonRadius * 2);
+                        break;
+                    case 'yellow': // Add this case
+                        ctx.drawImage(yellowBalloonSprite, balloon.x - balloonRadius, balloon.y - balloonRadius, balloonRadius * 2, balloonRadius * 2);
+                        break;
+                    default:
+                        // Default drawing for other balloons
+                        ctx.beginPath();
+                        ctx.arc(balloon.x, balloon.y, balloonRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = balloon.color;
+                        ctx.fill();
+                        ctx.closePath();
+                }
+            }
+        }
+
+        function drawScore() {
+            ctx.font = '12px "Press Start 2P"'; // Set the font size and family
+            ctx.fillStyle = 'black'; // Set the text color
+            ctx.fillText('Points: ' + score, 20, 30); // Draw the score text
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            projectiles.forEach(drawProjectile);
+            balloons.forEach(drawBalloon);
+            drawScore();
+            drawTimer();
+            drawUpgradeButton();
+        }
+
+        // let popSounds = [
+        //     // new Audio('pop1.mp3'),
+        //     new Audio('pop2.mp3'),
+        //     // new Audio('pop3.mp3'),
+        //     // new Audio('pop4.mp3'),
+        //     //new Audio('pop5.mp3'),
+        //     //new Audio('pop6.mp3'),
+        //     //new Audio('pop7.mp3'),
+        //     //new Audio('pop8.mp3')
+        // ];
+        let popSoundUrls = ['pop2.mp3']; // Add more sound file URLs as needed
+        let popSounds = popSoundUrls.map(url => new Audio(url));
+
+
+        function detectCollisions() {
+            projectiles.forEach((projectile, pIndex) => {
+                balloons.forEach((balloon, bIndex) => {
+                    const dist = Math.sqrt((projectile.x - balloon.x) ** 2 + (projectile.y - balloon.y) ** 2);
+                    if (dist < balloonRadius + projectileRadius && !balloon.isPopping) {
+                        // Check the color of the balloon and apply power-up if it's yellow
+                        if (balloon.color === 'yellow') {
+                            activatePowerUp();
+                        }
+                        if (balloon.color !== 'red' || projectile.power === 1) {
+
+                            // Start popping animation instead of removing the balloon
+                            balloon.isPopping = true;
+
+                // Create and play a new Audio instance for the pop sound
+                let randomSoundIndex = Math.floor(Math.random() * popSounds.length);
+                let sound = new Audio(popSounds[randomSoundIndex].src);
+                sound.play();
+
+                            score += (balloon.color === 'blue') ? 10 : 20;
+                            projectiles.splice(pIndex, 1); // Remove the projectile
+                        }
+                    }
+                });
+            });
+        }
+
+        function activatePowerUp() {
+            powerUpActive = true;
+            powerUpEndTime = Date.now() + 10000; // 10 seconds from now
+        }
+
+
+        function updateTimer() {
+            elapsedTime = Date.now() - startTime;
+        }
+
+        function drawTimer() {
+            const seconds = Math.floor(elapsedTime / 1000);
+            ctx.font = '12px "Press Start 2P"'; // Use Press Start 2P font
+            ctx.fillStyle = 'black';
+            ctx.fillText('Time: ' + seconds + 's', canvas.width - 125, 30);
+        }
+
+
+        canvas.addEventListener('click', function (event) {
+            if (powerUpActive) {
+                // Fire a full power shot
+                fireFullPowerShot(event);
+            } else {
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                createProjectile(x, y);
+            }
+        });
+
+        // Function to create a full power shot
+        function fireFullPowerShot(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            createProjectile(x, y, minChargeTime); // Fire with max power regardless of charge time
+        }
+
+
+        let lastFrameTime = Date.now();
+
+        function gameLoop() {
+            // Clear the canvas
+            //ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the background pattern first
+            //drawBackground();
+
+            // Check if the game is not over
+            if (!gameOver) {
+                const currentFrameTime = Date.now();
+                const deltaTime = ((currentFrameTime - lastFrameTime) / 1000) * 60;
+                lastFrameTime = currentFrameTime;
+                elapsedTime = currentFrameTime - startTime;
+
+                // Update game elements
+                updateProjectiles(deltaTime);
+                updateBalloons(deltaTime);
+                detectCollisions();
+                updateTimer();
+                updateSpawnInterval();
+
+                // Draw game elements
+                draw();
+                spawnBalloonIfNeeded();
+
+                // Check if the power-up should still be active
+                if (powerUpActive && Date.now() > powerUpEndTime) {
+                    powerUpActive = false;
+                }
+            }
+
+            // Request the next frame
+            requestAnimationFrame(gameLoop);
+
+            // Check and display game over screen
+            if (gameOver) {
+                displayGameOver();
+            }
+        }
+
+        let skyTexture = new Image();
+
+        function startGame() {
+            if (!gameOver) {
+                gameLoop();
+            }
+        }
+
+        skyTexture.onload = startGame;
+        skyTexture.onerror = function () {
+            console.error('Failed to load the sky texture.');
+        };
+        skyTexture.src = 'cloud1.png'; // Make sure this is the correct path
+
+        // If the image is cached, it might be already loaded at this point, so check for that
+        if (skyTexture.complete) {
+            startGame();
+        }
+
+        function drawBackground(ctx, canvas, offset) {
+            const pattern = ctx.createPattern(skyTexture, 'repeat');
+            ctx.fillStyle = pattern;
+
+            ctx.save();
+            ctx.translate(-offset, 0);
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
+            ctx.restore();
+        }
+
+
+        let lastSpawnTime = 0;
+
+        function spawnBalloonIfNeeded() {
+            if (Date.now() - lastSpawnTime > balloonSpawnInterval) {
+                spawnBalloon();
+                lastSpawnTime = Date.now();
+            }
+        }
+
+        function updateProjectiles(deltaTime) {
+            projectiles.forEach(p => {
+                p.x += p.vx * deltaTime;
+                p.y += p.vy * deltaTime;
+            });
+        }
+
+        function updateBalloons(deltaTime) {
+            balloons.forEach((balloon, index) => {
+                if (balloon.remove) {
+                    balloons.splice(index, 1);
+                } else {
+                    balloon.y += balloon.vy * deltaTime;
+                    if (balloon.y > canvas.height) {
+                        gameOver = true;
+                    }
+                }
+            });
+        }
+
+
+        function drawPlayAgainButton() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height);
+            ctx.font = '8px "Press Start 2P"'; // Use Press Start 2P font
+            ctx.fillStyle = 'white';
+            ctx.fillText(playAgainButton.text, playAgainButton.x + 10, playAgainButton.y + 25);
+        }
+
+        function displayGameOver() {
+            ctx.font = '36px "Press Start 2P"'; // Use Press Start 2P font
+            ctx.fillStyle = 'red';
+            ctx.fillText('Game Over', canvas.width / 2.9 - 100, canvas.height / 2); // You might need to adjust the position
+            drawPlayAgainButton();
+        }
+
+
+        function restartGame() {
+            // Reset game state variables
+            gameOver = false;
+            score = 0;
+            balloons = [];
+            projectiles = [];
+            startTime = Date.now();
+            gameLoop();
+        }
+
+        function handleButtonClick(x, y) {
+            if (gameOver && x > playAgainButton.x && x < playAgainButton.x + playAgainButton.width &&
+                y > playAgainButton.y && y < playAgainButton.y + playAgainButton.height) {
+                restartGame();
+            }
+        }
+
+        canvas.addEventListener('click', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            handleButtonClick(x, y);
+        });
+
+        gameLoop();
+
+
+        if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registered! Scope:', registration.scope);
+      })
+      .catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+  });
+}
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Update UI to show an install button
+  btnInstall.style.display = 'block';
+});
+
+btnInstall.addEventListener('click', () => {
+  // Hide the install button
+  btnInstall.style.display = 'none';
+  // Show the install prompt
+  deferredPrompt.prompt();
+  // Wait for the user to respond to the prompt
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+  });
+});
+
+    </script>
+</body>
+
+</html>
