@@ -270,11 +270,11 @@
 
         function updateSpawnInterval() {
             const timeElapsed = Date.now() - startTime;
-            if (timeElapsed > 120000) { // After 120 seconds
-                balloonSpawnInterval = 400; // Update interval to 100
+            if (timeElapsed > 180000) { // After 120 seconds
+                balloonSpawnInterval = 300; // Update interval to 100
                 console.log(balloonSpawnInterval);
-                // } else if (timeElapsed > 60000) { // After 0.9 seconds
-                //     balloonSpawnInterval = 450; // Update interval to 700
+                } else if (timeElapsed > 120000) { // After 0.9 seconds
+                     balloonSpawnInterval = 400; // Update interval to 700
                 console.log(balloonSpawnInterval);
             } else if (timeElapsed > 30000) { // After 0.9 seconds
                 balloonSpawnInterval = 600; // Update interval to 700
@@ -432,7 +432,7 @@
 
             // Decide if the balloon should be spawned based on its rarity
             if (isYellowBalloon) {
-                shouldSpawnBalloon = Math.random() < 0.07; // Adjust for the desired rarity of yellow balloons
+                shouldSpawnBalloon = Math.random() < 0.05; // Adjust for the desired rarity of yellow balloons
             }
 
             // Add the balloon to the array if it should be spawned
