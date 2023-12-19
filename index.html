@@ -14,41 +14,54 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            touch-action: none;
-            /* Prevents scrolling */
-            user-select: none;
-            /* Prevents text selection */
+            touch-action: none; /* Prevents scrolling */
+            user-select: none; /* Prevents text selection */
             font-family: 'Press Start 2P', cursive;
-        }
-
-        #gameCanvas {
-            border: 3px solid black;
-            /* background-color: rgb(103, 255, 103); */
             background: rgb(2, 0, 36);
             background: linear-gradient(0deg, rgba(2, 0, 36, 1) 0%, rgba(0, 212, 255, 1) 0%, rgba(52, 146, 255, 1) 100%);
         }
 
+        #gameCanvas {
+            max-height: calc(100vh - 60px); /* 60px leaves room for the ad banner */
+            width: auto; /* Maintain aspect ratio */
+            border: 3px solid black;
+        }
+
+        #ad-container {
+            width: 100%;
+            height: 50px; /* Adjust based on your ad size */
+            margin-top: 10px; /* Space between canvas and ad */
+            background-color: #ddd; /* Placeholder style */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
         canvas {
-            touch-action: none;
-            /* Prevents the browser's default touch behaviors like zooming and scrolling */
+            touch-action: none; /* Prevents the browser's default touch behaviors */
         }
     </style>
 </head>
 
 <body>
     <canvas id="gameCanvas"></canvas>
-    <script>
+    <div id="ad-container">
+        <!-- Ad content goes here -->
+        <p>Ad Banner</p>    <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 350;
+        canvas.width = 370;
         canvas.height = 600;
 
         const projectiles = [];
-        const slingshot = { x: canvas.width / 2, y: canvas.height - 50 };
+        const slingshot = { x: canvas.width / 2, y: canvas.height - 20 };
         const speed = 5;
         const projectileRadius = 5;
 
@@ -130,8 +143,18 @@
 
             // console.log("Touch End - Duration:", touchDuration, "Coords:", touchStartX, touchStartY); // Log touch end details
 
-            if (power >= minPowerThreshold) {
-                createProjectile(touchStartX, touchStartY, touchDuration);
+            // IF YOU UNCOMMENT THIS IT WILL SHOOT TWO PROJECTILES
+            // if (power >= minPowerThreshold) {
+            //     createProjectile(touchStartX, touchStartY, touchDuration);
+            // }
+            // If power-up is active, fire immediately on tap, else calculate power
+            if (powerUpActive) {
+                createProjectile(touchStartX, touchStartY, minChargeTime); // Full power shot
+            } else {
+                const power = Math.min(touchDuration / minChargeTime, 1);
+                if (power >= minPowerThreshold) {
+                    createProjectile(touchStartX, touchStartY, touchDuration);
+                }
             }
 
             isTouching = false;
@@ -145,6 +168,7 @@
 
             // Assuming you have a function to handle button clicks
             handleUpgradeClick(x, y);
+            handlePowerUpButtonClick(x, y);
         });
 
 
@@ -170,17 +194,55 @@
 
         function drawUpgradeButton() {
             if (!isTripleShotEnabled && score >= tripleShotUpgradeCost) {
-                ctx.fillStyle = 'green';
-                ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
-                ctx.font = '12px "Press Start 2P"';
-                ctx.fillStyle = 'white';
-                ctx.fillText("Triple Shot", upgradeButton.x + 10, upgradeButton.y + 25);
+                // ctx.fillStyle = 'green';
+                // ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
+                // ctx.font = '12px "Press Start 2P"';
+                // ctx.fillStyle = 'white';
+                // ctx.fillText("Triple Shot", upgradeButton.x + 10, upgradeButton.y + 25);
+                const buttonWidth = 103;  // Button width
+                const buttonHeight = 30; // Button height
+                const margin = 10;
+                const buttonX = margin;
+                const buttonY = canvas.height - buttonHeight - margin;
+
+                // Draw button background
+                ctx.fillStyle = '#00FF00'; // Bright green
+                ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Add pixelated border
+                ctx.strokeStyle = '#008000'; // Darker green for border
+                ctx.lineWidth = 3;
+                ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Draw button text
+                ctx.font = '12px "Press Start 2P"'; // Pixelated font
+                ctx.fillStyle = '#000000'; // Black for text
+                ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
             } else if (!isDoubleShotEnabled && score >= doubleShotUpgradeCost) {
-                ctx.fillStyle = 'green';
-                ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
-                ctx.font = '12px "Press Start 2P"';
-                ctx.fillStyle = 'white';
-                ctx.fillText(upgradeButton.text, upgradeButton.x + 10, upgradeButton.y + 25);
+                // ctx.fillStyle = 'green';
+                // ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
+                // ctx.font = '12px "Press Start 2P"';
+                // ctx.fillStyle = 'white';
+                // ctx.fillText(upgradeButton.text, upgradeButton.x + 10, upgradeButton.y + 25);
+                const buttonWidth = 103;  // Button width
+                const buttonHeight = 30; // Button height
+                const margin = 10;
+                const buttonX = margin;
+                const buttonY = canvas.height - buttonHeight - margin;
+
+                // Draw button background
+                ctx.fillStyle = '#00FF00'; // Bright green
+                ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Add pixelated border
+                ctx.strokeStyle = '#008000'; // Darker green for border
+                ctx.lineWidth = 3;
+                ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Draw button text
+                ctx.font = '12px "Press Start 2P"'; // Pixelated font
+                ctx.fillStyle = '#000000'; // Black for text
+                ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
             }
         }
 
@@ -370,7 +432,7 @@
 
             // Decide if the balloon should be spawned based on its rarity
             if (isYellowBalloon) {
-                shouldSpawnBalloon = Math.random() < 0.01; // Adjust for the desired rarity of yellow balloons
+                shouldSpawnBalloon = Math.random() < 0.07; // Adjust for the desired rarity of yellow balloons
             }
 
             // Add the balloon to the array if it should be spawned
@@ -463,12 +525,45 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw the static projectile at the slingshot
+            drawStaticProjectileAtSlingshot();
             projectiles.forEach(drawProjectile);
             balloons.forEach(drawBalloon);
             drawScore();
             drawTimer();
             drawUpgradeButton();
+            drawPowerUpButton();
         }
+
+        function drawStaticProjectileAtSlingshot() {
+            if (projectileSprite.complete && projectileSprite.naturalHeight !== 0) {
+                // Assuming you have a slingshot object with x and y properties
+                const projectileRadius = 5; // Use the same radius as in drawProjectile
+                const offsetX = projectileRadius; // To center the image at the slingshot
+                const offsetY = projectileRadius; // To center the image at the slingshot
+
+                ctx.drawImage(projectileSprite, slingshot.x - offsetX, slingshot.y - offsetY, projectileRadius * 2, projectileRadius * 2);
+            }
+        }
+
+
+
+        function handlePowerUpButtonClick(x, y) {
+            const buttonWidth = 100;
+            const buttonHeight = 50;
+            const margin = 10;
+            const buttonX = canvas.width - buttonWidth - margin;
+            const buttonY = canvas.height - buttonHeight - margin;
+
+            // Check if the click/tap is within the button's area
+            if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight && hasStoredPowerUp) {
+                activatePowerUp();
+                hasStoredPowerUp = false; // Reset the stored power-up
+            }
+        }
+
+        // Remember to attach this function to both 'click' and 'touchend' event listeners
+
 
         // let popSounds = [
         //     // new Audio('pop1.mp3'),
@@ -483,6 +578,7 @@
         let popSoundUrls = ['pop2.mp3']; // Add more sound file URLs as needed
         let popSounds = popSoundUrls.map(url => new Audio(url));
 
+        let hasStoredPowerUp = false;
 
         function detectCollisions() {
             projectiles.forEach((projectile, pIndex) => {
@@ -491,17 +587,18 @@
                     if (dist < balloonRadius + projectileRadius && !balloon.isPopping) {
                         // Check the color of the balloon and apply power-up if it's yellow
                         if (balloon.color === 'yellow') {
-                            activatePowerUp();
+                            hasStoredPowerUp = true;
+                            // activatePowerUp();
                         }
                         if (balloon.color !== 'red' || projectile.power === 1) {
 
                             // Start popping animation instead of removing the balloon
                             balloon.isPopping = true;
 
-                // Create and play a new Audio instance for the pop sound
-                let randomSoundIndex = Math.floor(Math.random() * popSounds.length);
-                let sound = new Audio(popSounds[randomSoundIndex].src);
-                sound.play();
+                            // Create and play a new Audio instance for the pop sound
+                            let randomSoundIndex = Math.floor(Math.random() * popSounds.length);
+                            let sound = new Audio(popSounds[randomSoundIndex].src);
+                            sound.play();
 
                             score += (balloon.color === 'blue') ? 10 : 20;
                             projectiles.splice(pIndex, 1); // Remove the projectile
@@ -510,6 +607,33 @@
                 });
             });
         }
+
+        function drawPowerUpButton() {
+            if (hasStoredPowerUp) {
+                const buttonWidth = 113;  // Smaller width
+                const buttonHeight = 30; // Smaller height
+                const margin = 10;
+                const buttonX = canvas.width - buttonWidth - margin;
+                const buttonY = canvas.height - buttonHeight - margin;
+
+                // Draw button background
+                ctx.fillStyle = '#FFFF00'; // Bright yellow
+                ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Add pixelated border
+                ctx.strokeStyle = '#FFD700'; // Gold for border
+                ctx.lineWidth = 3;
+                ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                // Draw button text
+                ctx.font = '12px "Press Start 2P"'; // Smaller font size
+                ctx.fillStyle = '#000000'; // Black for text
+                const textX = buttonX + 10;
+                const textY = buttonY + 20; // Adjust y position for smaller button
+                ctx.fillText('Power-Up', textX, textY);
+            }
+        }
+
 
         function activatePowerUp() {
             powerUpActive = true;
@@ -690,46 +814,47 @@
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             handleButtonClick(x, y);
+            handlePowerUpButtonClick(x, y);
         });
 
         gameLoop();
 
 
         if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('Service Worker registered! Scope:', registration.scope);
-      })
-      .catch(err => {
-        console.log('Service Worker registration failed:', err);
-      });
-  });
-}
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered! Scope:', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            });
+        }
 
-let deferredPrompt;
+        let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Update UI to show an install button
-  btnInstall.style.display = 'block';
-});
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Update UI to show an install button
+            btnInstall.style.display = 'block';
+        });
 
-btnInstall.addEventListener('click', () => {
-  // Hide the install button
-  btnInstall.style.display = 'none';
-  // Show the install prompt
-  deferredPrompt.prompt();
-  // Wait for the user to respond to the prompt
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-  });
-});
+        btnInstall.addEventListener('click', () => {
+            // Hide the install button
+            btnInstall.style.display = 'none';
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+            });
+        });
 
     </script>
 </body>
