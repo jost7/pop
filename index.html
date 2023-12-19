@@ -112,6 +112,10 @@
 
         let isTouching = false;
 
+        let lastFrameTime = Date.now();
+
+        let lastSpawnTime = 0;
+
         canvas.addEventListener('touchstart', function (event) {
             event.preventDefault();
             const touch = event.touches[0] || event.changedTouches[0]; // Ensure we're getting the touch
@@ -673,9 +677,6 @@
             createProjectile(x, y, minChargeTime); // Fire with max power regardless of charge time
         }
 
-
-        let lastFrameTime = Date.now();
-
         function gameLoop() {
             // Clear the canvas
             //ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -744,9 +745,6 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas
             ctx.restore();
         }
-
-
-        let lastSpawnTime = 0;
 
         function spawnBalloonIfNeeded() {
             if (Date.now() - lastSpawnTime > balloonSpawnInterval) {
