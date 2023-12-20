@@ -60,11 +60,166 @@
     <canvas id="gameCanvas"></canvas>
     <div id="ad-container">
         <!-- Ad content goes here -->
-        <p>Ad Banner</p>    <script>
+        <p>Ad Banner</p>    
+        <script>
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = 370;
         canvas.height = 600;
+
+        let gameStarted = false;
+
+        let menuBalloons = [];
+
+        // Call this when your page loads or your script starts
+// drawMainMenu();
+
+        function drawMainMenu() {
+            // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw a semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // Adjust color and transparency as needed
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    updateMenuBalloons();
+    menuBalloons.forEach(drawBalloon); // Draw the balloons
+
+    // // Create a linear gradient for the button background
+    // let gradient = ctx.createLinearGradient(playButton.x, playButton.y, playButton.x, playButton.y + playButton.height);
+    // gradient.addColorStop(0, '#28a745'); // Light green
+    // gradient.addColorStop(1, '#155d27'); // Dark green
+
+    // // Draw rounded button background
+    // ctx.beginPath();
+    // ctx.moveTo(playButton.x + playButton.radius, playButton.y);
+    // ctx.arcTo(playButton.x + playButton.width, playButton.y, playButton.x + playButton.width, playButton.y + playButton.height, playButton.radius);
+    // ctx.arcTo(playButton.x + playButton.width, playButton.y + playButton.height, playButton.x, playButton.y + playButton.height, playButton.radius);
+    // ctx.arcTo(playButton.x, playButton.y + playButton.height, playButton.x, playButton.y, playButton.radius);
+    // ctx.arcTo(playButton.x, playButton.y, playButton.x + playButton.width, playButton.y, playButton.radius);
+    // ctx.closePath();
+    // ctx.fillStyle = gradient;
+    // ctx.fill();
+
+    // // Add shadow for 3D effect
+    // ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    // ctx.shadowBlur = 4;
+    // ctx.shadowOffsetX = 0;
+    // ctx.shadowOffsetY = 4;
+    // ctx.fill();
+
+    // // Reset shadow for other elements
+    // ctx.shadowColor = 'transparent';
+
+    // // Button Text
+    // ctx.fillStyle = 'white'; // Text color
+    // ctx.font = '20px "Press Start 2P"'; // Font size and family
+    // ctx.textAlign = 'center';
+    // ctx.textBaseline = 'middle';
+    // ctx.fillText('PLAY', playButton.x + playButton.width / 2, playButton.y + playButton.height / 2);
+
+    //     // Draw the "How to Play" button
+    //     drawButton(howToPlayButton, 'How to Play');
+
+    // In drawMainMenu:
+drawButton(playButton, 'PLAY');
+// drawButton(howToPlayButton, 'How to Play');
+// drawDebugRect(howToPlayButton);
+
+    // Draw instructions text
+    drawInstructions();
+
+// After drawing the "PLAY" button
+ctx.textAlign = 'left';
+        // Request to draw the main menu again
+        if (!gameStarted) {
+        requestAnimationFrame(drawMainMenu);
+    }
+}
+
+function wrapTextList(context, textList, x, startY, maxWidth, lineHeight) {
+    let y = startY;
+
+    for (let i = 0; i < textList.length; i++) {
+        const words = textList[i].split(' ');
+        let line = '';
+
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = context.measureText(testLine);
+            const testWidth = metrics.width;
+
+            if (testWidth > maxWidth && n > 0) {
+                context.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+
+        context.fillText(line, x, y);
+        y += lineHeight; // Move to the start of the next list item
+    }
+}
+
+function drawInstructions() {
+    let instructionsY = howToPlayButton.y + howToPlayButton.height + 20; // Start position for the instructions
+    const maxWidth = canvas.width - 20; // Maximum width for the text
+    const lineHeight = 20; // Line height
+
+    ctx.fillStyle = 'white';
+    ctx.font = '10px "Press Start 2P"';
+    ctx.textAlign = 'left';
+
+    const instructionsList = [
+        "How to play:",
+        "",
+        "- Click/tap and hold to shoot a projectile",
+        // "3. Make sure to also handle the other thing.",
+        // "4. Be aware of the limits and try to achieve the goals."
+    ];
+    wrapTextList(ctx, instructionsList, 10, instructionsY, maxWidth, lineHeight);
+}
+// function drawInstructions() {
+//     let instructionsY = howToPlayButton.y + howToPlayButton.height + 20; // Position below the "How to Play" button
+//     ctx.fillStyle = 'white';
+//     ctx.font = '10px "Press Start 2P"';
+//     ctx.textAlign = 'left';
+//     ctx.fillText('How to play:', 10, instructionsY);
+//     ctx.fillText('- Click/tap and hold to shoot a projectile', 10, instructionsY + 20);
+//     ctx.fillText('- Red balloons require a fully charged shot to burst', 10, instructionsY + 40);
+//     // Add more instructions as needed
+// }
+
+function checkPlayButtonPress(x, y) {
+    if (x >= playButton.x && x <= playButton.x + playButton.width &&
+        y >= playButton.y && y <= playButton.y + playButton.height) {
+        startGame();
+    }
+}
+canvas.addEventListener('click', function(event) {
+    if (gameStarted) return; // Ignore clicks if the game has already started
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    checkPlayButtonPress(clickX, clickY);
+});
+canvas.addEventListener('touchend', function(event) {
+    if (gameStarted) return; // Ignore touches if the game has already started
+
+    event.preventDefault(); // Prevents default scrolling behavior on touch devices
+
+    const touch = event.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+
+    checkPlayButtonPress(touchX, touchY);
+});
+
 
         const projectiles = [];
         const slingshot = { x: canvas.width / 2, y: canvas.height - 20 };
@@ -84,7 +239,7 @@
 
         const minPowerThreshold = 0.5; // Minimum power required to shoot
 
-        let startTime = Date.now();
+        // let startTime = Date.now();
         const redBalloonGravity = 0.55; // Slower falling speed for red balloons
         const redBalloonSpawnInterval = 2000; // Less frequent spawn for red balloons
 
@@ -105,7 +260,7 @@
 
         let gameOver = false;
 
-        let playAgainButton = { x: canvas.width / 2.5 - 60, y: canvas.height / 2 + 30, width: 170, height: 40, text: 'Refresh to restart' };
+        // let playAgainButton = { x: canvas.width / 2.5 - 60, y: canvas.height / 2 + 30, width: 170, height: 40, text: 'Refresh to restart' };
 
         let touchStartX = 0;
         let touchStartY = 0;
@@ -121,6 +276,163 @@
         let lastFrameTime = Date.now();
 
         let lastSpawnTime = 0;
+
+        function getRandomBalloonColor() {
+    const colors = ['red', 'blue', 'green', 'yellow']; // Add more colors as needed
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function updateMenuBalloons() {
+    // Randomly decide whether to spawn a balloon
+    if (Math.random() < 0.1) { // Adjust this probability as needed
+        if (menuBalloons.length < 20) { // Ensure there's a max number of balloons
+            menuBalloons.push(createMenuBalloon());
+        }
+    }
+
+    // Update balloon positions
+    menuBalloons.forEach((balloon, index) => {
+        balloon.y += balloon.vy;
+
+        // Remove the balloon when it's completely off-screen
+        if (balloon.y > canvas.height + balloonRadius) {
+            menuBalloons.splice(index, 1);
+        }
+    });
+}
+
+function createMenuBalloon() {
+    const x = Math.random() * canvas.width;
+    const vy = gravity - 0.8 + Math.random() * 0.5; // Adjust the random factor as needed
+
+    return {
+        x: x,
+        y: -balloonRadius,
+        vy: vy,
+        color: getRandomBalloonColor(),
+        isPopping: false
+    };
+}
+
+
+let playButton = {
+    x: canvas.width / 2 - 50, // Center the button on the canvas
+    y: canvas.height / 2 - 25,
+    width: 100,
+    height: 50,
+    radius: 10
+};
+let howToPlayButton = {
+    x: canvas.width / 2 - 100,
+    y: playButton.y + 70, // Positioned below the "PLAY" button
+    width: 200,
+    height: 50,
+    radius: 10
+};
+let backButton = {
+    x: canvas.width / 2 - 50,
+    y: canvas.height - 100,
+    width: 100,
+    height: 50,
+    radius: 10
+};
+
+function drawButton(button, text) {
+    // Reset shadow for button
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+
+    // Gradient for button
+    let gradient = ctx.createLinearGradient(button.x, button.y, button.x, button.y + button.height);
+    gradient.addColorStop(0, '#28a745'); // Light green
+    gradient.addColorStop(1, '#155d27'); // Dark green
+
+    // Draw button
+    ctx.beginPath();
+    ctx.moveTo(button.x + button.radius, button.y);
+    ctx.arcTo(button.x + button.width, button.y, button.x + button.width, button.y + button.height, button.radius);
+    ctx.arcTo(button.x + button.width, button.y + button.height, button.x, button.y + button.height, button.radius);
+    ctx.arcTo(button.x, button.y + button.height, button.x, button.y, button.radius);
+    ctx.arcTo(button.x, button.y, button.x + button.width, button.y, button.radius);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Text on button
+    ctx.fillStyle = 'white';
+    ctx.font = '16px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, button.x + button.width / 2, button.y + button.height / 2);
+
+    // Reset shadow for other elements
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+}
+
+
+let showingInstructions = false;
+
+canvas.addEventListener('click', function(event) {
+    if (gameStarted) return; // Ignore clicks if the game has already started
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    console.log("Clicked at:", clickX, clickY);
+
+    if (!showingInstructions) {
+        console.log("Clicked at:", clickX, clickY);
+        console.log("How to Play Button bounds:", howToPlayButton.x, howToPlayButton.y, howToPlayButton.x + howToPlayButton.width, howToPlayButton.y + howToPlayButton.height);
+
+        if (isInsideButton(clickX, clickY, howToPlayButton)) {
+            console.log("How to Play clicked");
+            showingInstructions = true;
+            displayHowToPlayInstructions();
+        }
+    } else {
+
+        console.log("Instructions screen"); // For debugging
+        if (isInsideButton(clickX, clickY, backButton)) {
+            console.log("Back clicked"); // For debugging
+            showingInstructions = false;
+            drawMainMenu();
+        }
+    }
+});
+
+function isInsideButton(x, y, button) {
+    return x > button.x && x < button.x + button.width && y > button.y && y < button.y + button.height;
+}
+
+
+function drawDebugRect(button) {
+    ctx.strokeStyle = 'red'; // Temporary border color for debugging
+    ctx.strokeRect(button.x, button.y, button.width, button.height);
+}
+
+function displayHowToPlayInstructions() {
+    // Clear canvas and draw instructions
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '16px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('How to Play', canvas.width / 2, 50);
+    ctx.fillText('Instructions go here...', canvas.width / 2, 100);
+    // Add more text or images as needed to explain the game
+
+    drawButton(backButton, 'Back');
+}
+
+
 
         canvas.addEventListener('touchstart', function (event) {
             event.preventDefault();
@@ -179,36 +491,11 @@
             // Assuming you have a function to handle button clicks
             handleUpgradeClick(x, y);
             handlePowerUpButtonClick(x, y);
+            handleButtonClick(x, y)
         });
-
-
-
-        // canvas.addEventListener('touchstart', function (event) {
-        //     event.preventDefault();
-        //     const touch = event.touches[0];
-        //     const rect = canvas.getBoundingClientRect();
-        //     touchStartX = touch.clientX - rect.left;
-        //     touchStartY = touch.clientY - rect.top;
-        //     touchStartTime = new Date().getTime();
-        // }, { passive: false });
-
-        // canvas.addEventListener('touchend', function (event) {
-        //     event.preventDefault();
-        //     const touchDuration = new Date().getTime() - touchStartTime;
-        //     createProjectile(touchStartX, touchStartY, touchDuration);
-        // }, { passive: false });
-
-        // canvas.addEventListener('touchmove', function (event) {
-        //     event.preventDefault();
-        // }, { passive: false });
 
         function drawUpgradeButton() {
             if (!isTripleShotEnabled && score >= tripleShotUpgradeCost) {
-                // ctx.fillStyle = 'green';
-                // ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
-                // ctx.font = '12px "Press Start 2P"';
-                // ctx.fillStyle = 'white';
-                // ctx.fillText("Triple Shot", upgradeButton.x + 10, upgradeButton.y + 25);
                 const buttonWidth = 103;  // Button width
                 const buttonHeight = 30; // Button height
                 const margin = 10;
@@ -229,11 +516,6 @@
                 ctx.fillStyle = '#000000'; // Black for text
                 ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
             } else if (!isDoubleShotEnabled && score >= doubleShotUpgradeCost) {
-                // ctx.fillStyle = 'green';
-                // ctx.fillRect(upgradeButton.x, upgradeButton.y, upgradeButton.width, upgradeButton.height);
-                // ctx.font = '12px "Press Start 2P"';
-                // ctx.fillStyle = 'white';
-                // ctx.fillText(upgradeButton.text, upgradeButton.x + 10, upgradeButton.y + 25);
                 const buttonWidth = 103;  // Button width
                 const buttonHeight = 30; // Button height
                 const margin = 10;
@@ -297,7 +579,7 @@
             if (isMouseDown) {
                 const currentTime = new Date().getTime();
                 const timeHeld = currentTime - mouseDownTime;
-                const power = Math.min(timeHeld / minChargeTime, 1);
+                const power = Math.round((Math.min(timeHeld / minChargeTime, 1)) * 100) / 100;
 
                 if (power >= minPowerThreshold) {
                     const rect = canvas.getBoundingClientRect();
@@ -361,12 +643,28 @@
         }
 
         function drawPowerBar(power) {
+                // Draw border
+    ctx.fillStyle = 'black';
+    ctx.fillRect(powerBar.x - 3, powerBar.y - 3, powerBar.width + 2, powerBar.height + 2); // 1px border
+
+
             ctx.fillStyle = 'grey';
             ctx.fillRect(powerBar.x, powerBar.y, powerBar.width, powerBar.height);
 
-            ctx.fillStyle = 'green';
-            ctx.fillRect(powerBar.x, powerBar.y + powerBar.height * (1 - power), powerBar.width, powerBar.height * power);
-        }
+                // Draw the threshold indicator (e.g., a line at 50%)
+    // ctx.strokeStyle = 'red'; // Red line for threshold
+    // ctx.beginPath();
+    // ctx.moveTo(powerBar.x, powerBar.y + powerBar.height / 2);
+    // ctx.lineTo(powerBar.x + powerBar.width, powerBar.y + powerBar.height / 2);
+    // ctx.stroke();
+
+    // Draw the actual power bar
+    // Use different colors above and below the threshold
+    const powerHeight = powerBar.height * power;
+    const thresholdHeight = powerBar.height / 2;
+    ctx.fillStyle = power >= minPowerThreshold -0.13 ? 'green' : 'darkred';
+    ctx.fillRect(powerBar.x, powerBar.y + powerBar.height - powerHeight, powerBar.width, powerHeight);
+}
 
         canvas.addEventListener('mousedown', function (event) {
             isMouseDown = true;
@@ -375,7 +673,7 @@
         });
 
         function updatePowerBar() {
-            if ((isMouseDown || isTouching) && !powerUpActive) { // Add check for powerUpActive
+            if ((isMouseDown || isTouching) && !powerUpActive && gameStarted && !gameOver) { // Add check for powerUpActive
                 const currentTime = new Date().getTime();
                 // Use touchStartTime for touch events and mouseDownTime for mouse events
                 const startTime = isTouching ? touchStartTime : mouseDownTime;
@@ -529,7 +827,7 @@
 
         function drawScore() {
             ctx.font = '12px "Press Start 2P"'; // Set the font size and family
-            ctx.fillStyle = 'black'; // Set the text color
+            ctx.fillStyle = 'white'; // Set the text color
             ctx.fillText('Points: ' + score, 20, 30); // Draw the score text
         }
 
@@ -572,19 +870,6 @@
             }
         }
 
-        // Remember to attach this function to both 'click' and 'touchend' event listeners
-
-
-        // let popSounds = [
-        //     // new Audio('pop1.mp3'),
-        //     new Audio('pop2.mp3'),
-        //     // new Audio('pop3.mp3'),
-        //     // new Audio('pop4.mp3'),
-        //     //new Audio('pop5.mp3'),
-        //     //new Audio('pop6.mp3'),
-        //     //new Audio('pop7.mp3'),
-        //     //new Audio('pop8.mp3')
-        // ];
         let popSoundUrls = ['pop2.mp3']; // Add more sound file URLs as needed
         let popSounds = popSoundUrls.map(url => new Audio(url));
 
@@ -658,7 +943,7 @@
         function drawTimer() {
             const seconds = Math.floor(elapsedTime / 1000);
             ctx.font = '12px "Press Start 2P"'; // Use Press Start 2P font
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = 'white';
             ctx.fillText('Time: ' + seconds + 's', canvas.width - 125, 30);
         }
 
@@ -684,12 +969,7 @@
         }
 
         function gameLoop() {
-            // Clear the canvas
-            //ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw the background pattern first
-            //drawBackground();
-
+            if (!gameStarted) return; // Prevent the game loop from running if the game hasn't started
             // Check if the game is not over
             if (!gameOver) {
                 const currentFrameTime = Date.now();
@@ -726,13 +1006,16 @@
         let skyTexture = new Image();
 
         function startGame() {
-            if (!gameOver) {
-                gameLoop();
-            }
-        }
+    gameStarted = true;
+    startTime = Date.now(); // Initialize startTime here
+    gameLoop(); // Start the game loop
+}
 
-        skyTexture.onload = startGame;
-        skyTexture.onerror = function () {
+
+skyTexture.onload = function() {
+    // Image loaded
+    console.log("Sky texture loaded.");
+};        skyTexture.onerror = function () {
             console.error('Failed to load the sky texture.');
         };
         skyTexture.src = 'cloud1.png'; // Make sure this is the correct path
@@ -781,12 +1064,46 @@
 
 
         function drawPlayAgainButton() {
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height);
-            ctx.font = '8px "Press Start 2P"'; // Use Press Start 2P font
-            ctx.fillStyle = 'white';
-            ctx.fillText(playAgainButton.text, playAgainButton.x + 10, playAgainButton.y + 25);
-        }
+    // Gradient for button
+    let gradient = ctx.createLinearGradient(playAgainButton.x, playAgainButton.y, playAgainButton.x, playAgainButton.y + playAgainButton.height);
+    gradient.addColorStop(0, '#28a745'); // Light green for top of button
+    gradient.addColorStop(1, '#155d27'); // Dark green for bottom of button
+
+    // Draw rounded button background
+    ctx.beginPath();
+    ctx.moveTo(playAgainButton.x + playAgainButton.radius, playAgainButton.y);
+    ctx.arcTo(playAgainButton.x + playAgainButton.width, playAgainButton.y, playAgainButton.x + playAgainButton.width, playAgainButton.y + playAgainButton.height, playAgainButton.radius);
+    ctx.arcTo(playAgainButton.x + playAgainButton.width, playAgainButton.y + playAgainButton.height, playAgainButton.x, playAgainButton.y + playAgainButton.height, playAgainButton.radius);
+    ctx.arcTo(playAgainButton.x, playAgainButton.y + playAgainButton.height, playAgainButton.x, playAgainButton.y, playAgainButton.radius);
+    ctx.arcTo(playAgainButton.x, playAgainButton.y, playAgainButton.x + playAgainButton.width, playAgainButton.y, playAgainButton.radius);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Add shadow for 3D effect
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+    ctx.fill();
+
+    // Reset shadow for other elements
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Button Text
+    ctx.fillStyle = 'white'; // Text color
+    ctx.font = '16px "Press Start 2P"'; // Adjust font size as needed
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(playAgainButton.text, playAgainButton.x + playAgainButton.width / 2, playAgainButton.y + playAgainButton.height / 2);
+
+    // After drawing the "PLAY" button
+ctx.textAlign = 'left';
+}
+
 
         function displayGameOver() {
             ctx.font = '36px "Press Start 2P"'; // Use Press Start 2P font
@@ -797,21 +1114,59 @@
 
 
         function restartGame() {
-            // Reset game state variables
-            gameOver = false;
-            score = 0;
-            balloons = [];
-            projectiles = [];
-            startTime = Date.now();
-            gameLoop();
-        }
+    // Reset game state variables
+    gameOver = false;
+    score = 0;
+    balloons = [];
+    // projectiles = [];
+    startTime = Date.now();
+    showingInstructions = false; // If you have this flag for showing instructions
+    let elapsedTime = 0;
+
+    // Reset any other necessary variables
+    // For example, if you have a variable for elapsed game time, reset it here
+
+    // Begin the game loop again
+    gameLoop();
+}
+
+
+        canvas.addEventListener('click', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    handleButtonClick(x, y);
+});
+
 
         function handleButtonClick(x, y) {
-            if (gameOver && x > playAgainButton.x && x < playAgainButton.x + playAgainButton.width &&
-                y > playAgainButton.y && y < playAgainButton.y + playAgainButton.height) {
-                restartGame();
-            }
-        }
+    if (gameOver && x > playAgainButton.x && x < playAgainButton.x + playAgainButton.width &&
+        y > playAgainButton.y && y < playAgainButton.y + playAgainButton.height) {
+        restartGame();
+    }
+}
+
+let playAgainButton = {
+    x: canvas.width / 2 - 95, // Adjust as needed
+    y: canvas.height / 2 + 30, // Adjust as needed
+    width: 180, // Adjust as needed
+    height: 50, // Adjust as needed
+    radius: 10, // Adjust for roundness
+    text: 'Play Again'
+};
+
+
+// function drawPlayAgainButton() {
+//     ctx.fillStyle = 'blue';
+//     ctx.fillRect(playAgainButton.x, playAgainButton.y, playAgainButton.width, playAgainButton.height);
+
+//     ctx.font = '8px "Press Start 2P"';
+//     ctx.fillStyle = 'white';
+//     ctx.textAlign = 'center';
+//     ctx.textBaseline = 'middle';
+//     ctx.fillText(playAgainButton.text, playAgainButton.x + playAgainButton.width / 2, playAgainButton.y + playAgainButton.height / 2);
+// }
+
 
         canvas.addEventListener('click', function (event) {
             const rect = canvas.getBoundingClientRect();
@@ -821,8 +1176,9 @@
             handlePowerUpButtonClick(x, y);
         });
 
-        gameLoop();
+        drawMainMenu();
 
+        // gameLoop();
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
