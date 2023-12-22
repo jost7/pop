@@ -47,7 +47,7 @@
             width: 100%;
             height: 50px;
             /* Adjust based on your ad size */
-            margin-top: 0px;
+            margin-top: 20px;
             /* Space between canvas and ad */
             background-color: #ddd;
             /* Placeholder style */
@@ -113,16 +113,16 @@
                 ctx.textBaseline = 'middle';
 
                 // Apply shadow
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'; // Shadow color
-                ctx.shadowBlur = 10; // Blur level
-                ctx.shadowOffsetX = 5; // Horizontal offset
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -5; // Horizontal offset
                 ctx.shadowOffsetY = 5; // Vertical offset
 
                 // Position the title in the middle of the canvas, adjust y as needed
                 const titleX = canvas.width / 1.95;
                 const titleY = 125; // Adjust this value as needed
 
-                ctx.fillText('Skyshot', titleX, titleY);
+                ctx.fillText('SKYSHOT', titleX, titleY);
 
                 // Reset shadow for other elements
                 ctx.shadowColor = 'transparent';
@@ -158,12 +158,16 @@
             }
 
             function drawInstructions() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
                 let instructionsY = howToPlayButton.y + howToPlayButton.height + 20; // Start position for the instructions
                 const maxWidth = canvas.width - 20; // Maximum width for the text
                 const lineHeight = 20; // Line height
 
                 ctx.fillStyle = 'white';
-                ctx.font = '10px "Press Start 2P"';
+                ctx.font = '14px "Press Start 2P"';
                 ctx.textAlign = 'left';
 
                 const instructionsList = [
@@ -174,6 +178,11 @@
                     // "4. Be aware of the limits and try to achieve the goals."
                 ];
                 wrapTextList(ctx, instructionsList, 10, instructionsY, maxWidth, lineHeight);
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
             }
 
             function checkPlayButtonPress(x, y) {
@@ -322,11 +331,11 @@
             };
 
             function drawButton(button, text) {
-                // Reset shadow for button
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 4;
+                // Apply shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
 
                 // Gradient for button
                 let gradient = ctx.createLinearGradient(button.x, button.y, button.x, button.y + button.height);
@@ -406,6 +415,11 @@
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
+
                 ctx.fillStyle = 'white';
                 ctx.font = '16px "Press Start 2P"';
                 ctx.textAlign = 'center';
@@ -479,9 +493,13 @@
             });
 
             function drawUpgradeButton() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
                 if (!isMetalShotEnabled && score >= metalShotUpgradeCost) {
-                    const buttonWidth = 103;  // Button width
-                    const buttonHeight = 30; // Button height
+                    const buttonWidth = 120;  // Button width
+                    const buttonHeight = 60; // Button height
                     const margin = 10;
                     const buttonX = margin;
                     const buttonY = canvas.height - buttonHeight - margin;
@@ -497,11 +515,11 @@
 
                     // Draw button text
                     ctx.font = '12px "Press Start 2P"'; // Pixelated font
-                    ctx.fillStyle = '#000000'; // Black for text
-                    ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
+                    ctx.fillStyle = 'white'; // Black for text
+                    ctx.fillText('Upgrade', buttonX + 17, buttonY + 32); // Adjust text position
                 } else if (!isTripleShotEnabled && score >= tripleShotUpgradeCost) {
-                    const buttonWidth = 103;  // Button width
-                    const buttonHeight = 30; // Button height
+                    const buttonWidth = 120;  // Button width
+                    const buttonHeight = 60; // Button height
                     const margin = 10;
                     const buttonX = margin;
                     const buttonY = canvas.height - buttonHeight - margin;
@@ -517,11 +535,11 @@
 
                     // Draw button text
                     ctx.font = '12px "Press Start 2P"'; // Pixelated font
-                    ctx.fillStyle = '#000000'; // Black for text
-                    ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
+                    ctx.fillStyle = 'white'; // Black for text
+                    ctx.fillText('Upgrade', buttonX + 17, buttonY + 32); // Adjust text position
                 } else if (!isDoubleShotEnabled && score >= doubleShotUpgradeCost) {
-                    const buttonWidth = 103;  // Button width
-                    const buttonHeight = 30; // Button height
+                    const buttonWidth = 120;  // Button width
+                    const buttonHeight = 60; // Button height
                     const margin = 10;
                     const buttonX = margin;
                     const buttonY = canvas.height - buttonHeight - margin;
@@ -537,9 +555,14 @@
 
                     // Draw button text
                     ctx.font = '12px "Press Start 2P"'; // Pixelated font
-                    ctx.fillStyle = '#000000'; // Black for text
-                    ctx.fillText('Upgrade', buttonX + 10, buttonY + 20); // Adjust text position
+                    ctx.fillStyle = 'white'; // Black for text
+                    ctx.fillText('Upgrade', buttonX + 17, buttonY + 32); // Adjust text position
                 }
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
             }
 
             function isInsideButton(pos, btn) {
@@ -569,7 +592,9 @@
 
             function updateSpawnInterval() {
                 const timeElapsed = Date.now() - startTime;
-                if (timeElapsed > 180000) { // After 120 seconds
+                if (timeElapsed > 200000) {
+                    balloonSpawnInterval = 250;
+                } else if (timeElapsed > 180000) { // After 120 seconds
                     balloonSpawnInterval = 300; // Update interval to 100
                     console.log(balloonSpawnInterval);
                 } else if (timeElapsed > 120000) { // After 0.9 seconds
@@ -726,7 +751,7 @@
 
                 const isGreenBalloon = timeElapsed > 60000 && Math.random() < 0.3; // Less rare green balloon
                 const isRedBalloon = timeElapsed > 30000 && Math.random() < 0.7; // Common red balloon
-                const isYellowBalloon = timeElapsed > 1000 && Math.random() < 0.15; // Very rare yellow balloon
+                const isYellowBalloon = timeElapsed > 29000 && Math.random() < 0.15; // Very rare yellow balloon
 
 
                 if (isYellowBalloon) {
@@ -750,7 +775,7 @@
 
                 // Decide if the balloon should be spawned based on its rarity
                 if (isYellowBalloon) {
-                    shouldSpawnBalloon = Math.random() < 0.04; // Adjust for the desired rarity of yellow balloons
+                    shouldSpawnBalloon = Math.random() < 0.05; // Adjust for the desired rarity of yellow balloons
                 }
 
                 // Add the balloon to the array if it should be spawned
@@ -836,9 +861,20 @@
             }
 
             function drawScore() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
+
                 ctx.font = '12px "Press Start 2P"';
                 ctx.fillStyle = 'white';
                 ctx.fillText('Points: ' + score, 20, 30); // Draw the score text
+
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
             }
 
             function draw() {
@@ -909,9 +945,9 @@
                             }
 
                             // For non-red balloons or when Metal Shot is not enabled
-                            if (balloon.color !== 'red' || !isMetalShotEnabled) {
-                                projectile.hits += 1;
-                            }
+                            // if (balloon.color !== 'red' || !isMetalShotEnabled) {
+                            //     projectile.hits += 1;
+                            // }
 
                             // Remove the projectile if it hits the maximum number of balloons
                             if (projectile.hits >= 2) {
@@ -924,8 +960,13 @@
 
             function drawPowerUpButton() {
                 if (hasStoredPowerUp) {
-                    const buttonWidth = 113;  // Smaller width
-                    const buttonHeight = 30; // Smaller height
+                    ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                    ctx.shadowBlur = 1; // Blur level
+                    ctx.shadowOffsetX = -3; // Horizontal offset
+                    ctx.shadowOffsetY = 3; // Vertical offset
+
+                    const buttonWidth = 120;  // Smaller width
+                    const buttonHeight = 60; // Smaller height
                     const margin = 10;
                     const buttonX = canvas.width - buttonWidth - margin;
                     const buttonY = canvas.height - buttonHeight - margin;
@@ -941,10 +982,16 @@
 
                     // Draw button text
                     ctx.font = '12px "Press Start 2P"'; // Smaller font size
-                    ctx.fillStyle = '#000000'; // Black for text
-                    const textX = buttonX + 10;
-                    const textY = buttonY + 20; // Adjust y position for smaller button
+                    ctx.fillStyle = 'white'; // Black for text
+                    const textX = buttonX + 15;
+                    const textY = buttonY + 32; // Adjust y position for smaller button
                     ctx.fillText('Power-Up', textX, textY);
+
+                    // Reset shadow for other elements
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
                 }
             }
 
@@ -960,10 +1007,21 @@
             }
 
             function drawTimer() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
+
                 const seconds = Math.floor(elapsedTime / 1000);
                 ctx.font = '12px "Press Start 2P"';
                 ctx.fillStyle = 'white';
-                ctx.fillText('Time: ' + seconds + 's', canvas.width - 125, 30);
+                ctx.fillText('Time: ' + seconds + 's', canvas.width - 135, 30);
+
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
             }
 
 
@@ -1114,17 +1172,11 @@
                 ctx.fill();
 
                 // Add shadow for 3D effect
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 4;
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)';
+                ctx.shadowBlur = 1;
+                ctx.shadowOffsetX = -3;
+                ctx.shadowOffsetY = 3;
                 ctx.fill();
-
-                // Reset shadow for other elements
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
 
                 // Button Text
                 ctx.fillStyle = 'white';
@@ -1132,6 +1184,12 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(playAgainButton.text, playAgainButton.x + playAgainButton.width / 2, playAgainButton.y + playAgainButton.height / 2);
+
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
 
                 // After drawing the "PLAY" button
                 ctx.textAlign = 'left';
@@ -1180,12 +1238,23 @@
 
 
             function displayGameOver() {
+                ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+                ctx.shadowBlur = 1; // Blur level
+                ctx.shadowOffsetX = -3; // Horizontal offset
+                ctx.shadowOffsetY = 3; // Vertical offset
+
                 ctx.font = '36px "Press Start 2P"';
                 ctx.fillStyle = 'red';
-                ctx.fillText('Game Over', canvas.width / 2.9 - 100, canvas.height / 2);
+                ctx.fillText('Game Over', canvas.width / 2.9 - 100, canvas.height / 2.5);
                 drawPlayAgainButton();
                 drawButton(backToMenuButton, backToMenuButton.text);
                 ctx.textAlign = 'left';
+
+                // Reset shadow for other elements
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
             }
 
 
